@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:,">
+  <title>Rate Worker Demo</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: grid;
+      place-content: center;
+    }
+
+    button {
+      margin: 16px;
+      padding: 4px 6px;
+      cursor: pointer;
+    }
+
+    p {
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <button>Send 10 requests</button>
+
+  <script type="module">
+    const params = new URLSearchParams({
+      limitedHostnames: ['eth.llamarpc.com'],
+      maxConcurrentRequests: 2,
+      sleepDuration: 1000
+    });
+    await navigator.serviceWorker.register(`rate-worker.js?${params}`);
+
+    document.querySelector('button').addEventListener('click', () => {
+      for (let i = 0; i < 10; i++) {
+        fetch('https://eth.llamarpc.com', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: i,
+            method: 'eth_blockNumber',
+            params: []
+          })
+        })
+          .then(r => r.json())
+          .then(j => document.querySelector('body').insertAdjacentHTML('beforeend', `<p>${new Date().toLocaleTimeString()}: ${j.result}</p>`));
+      }
+    });
+  </script>
+</body>
+
+</html>
