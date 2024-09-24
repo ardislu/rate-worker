@@ -29,12 +29,12 @@
   <button>Send 10 requests</button>
 
   <script type="module">
-    const params = new URLSearchParams({
-      limitedHostnames: ['eth.llamarpc.com'],
+    const worker = await navigator.serviceWorker.register('rate-worker.js').then(r => r.active);
+    worker.postMessage({
+      hostname: ['eth.llamarpc.com'],
       maxConcurrentRequests: 2,
       sleepDuration: 1000
     });
-    await navigator.serviceWorker.register(`rate-worker.js?${params}`);
 
     document.querySelector('button').addEventListener('click', () => {
       for (let i = 0; i < 10; i++) {
