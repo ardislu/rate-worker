@@ -22,9 +22,9 @@ async function clearPending(throttle) {
     for (let i = 0; i < throttle.inflight.length; i++) {
       if (!throttle.inflight[i]) {
         throttle.inflight[i] = true;
-        const { request, resolve } = throttle.pending.shift();
+        const { request, resolve, reject } = throttle.pending.shift();
         (async () => {
-          await fetch(request).then(resolve);
+          await fetch(request).then(resolve).catch(reject);
           throttle.inflight[i] = false;
         })();
         if (throttle.pending.length === 0) { // This check needs to be nested in here because .shift mutates the length
@@ -38,8 +38,8 @@ async function clearPending(throttle) {
 }
 
 async function delayedFetch(request, throttle) {
-  const { promise, resolve } = Promise.withResolvers();
-  throttle.pending.push({ request, resolve });
+  const { promise, resolve, reject } = Promise.withResolvers();
+  throttle.pending.push({ request, resolve, reject });
   setTimeout(() => clearPending(throttle), throttle.batchInterval); // Use a short first sleep to gather initial requests, otherwise the first request will start immediately and then invoke the longer sleepDuration
   return promise;
 }
