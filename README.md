@@ -44,7 +44,7 @@ Throttles are stored by the service worker in-memory and will only last for the 
 
 ## `ThrottleOptions`
 
-Here is the [JSDoc](https://jsdoc.app/) annotation for the `ThrottleOptions` object you must post to the worker (copy this comment somewhere in your code to get autocomplete and tooltips):
+Here is the [JSDoc](https://jsdoc.app/) annotation for the `ThrottleOptions` object that the worker expects. Copy this comment somewhere in your code to get autocomplete and tooltips:
 
 ```javascript
 /**
@@ -72,4 +72,40 @@ Usage in TypeScript:
 const options: ThrottleOptions = {
   // ...
 }
+```
+
+## More examples
+
+Use the same throttle across multiple hostnames:
+
+```javascript
+// Requests across ALL these hostnames will be throttled to 5 requests/second
+worker.postMessage({
+  hostname: ['1.example.com', '2.example.com', '3.example.com'],
+  maxConcurrentRequests: 5,
+  sleepDuration: 1000
+});
+```
+
+Add multiple throttles at once:
+
+```javascript
+// Each throttle is independent
+worker.postMessage([
+  {
+    hostname: ['1.example.com'],
+    maxConcurrentRequests: 5,
+    sleepDuration: 1000
+  },
+  {
+    hostname: ['2.example.com'],
+    maxConcurrentRequests: 1,
+    sleepDuration: 100
+  },
+  {
+    hostname: ['3.example.com'],
+    maxConcurrentRequests: 10,
+    sleepDuration: 5000
+  }
+]);
 ```
