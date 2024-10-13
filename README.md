@@ -54,6 +54,8 @@ Here is the [JSDoc](https://jsdoc.app/) annotation for the `ThrottleOptions` obj
  * @property {number} [maxConcurrentRequests=10] The maximum number of requests that are allowed to be inflight at the same time.
  * @property {number} [sleepDuration=1000] The duration (in milliseconds) to wait in between sending each batch of requests.
  * @property {number} [batchInterval=100] The duration (in milliseconds) to wait before sending the first batch of requests.
+ * @property {Object} [requestParams] Additional URL parameters to pass with fetch requests to the hostname(s) (e.g., API key parameter). 
+ * @property {RequestInit} [requestOptions] Additional request options to pass with fetch requests to the hostname(s) (e.g., Authorization header).
  */
 ```
 
@@ -108,4 +110,16 @@ worker.postMessage([
     sleepDuration: 5000
   }
 ]);
+```
+
+Add a throttle that injects custom URL parameters and request options (e.g., injects an API key or an authorization header):
+
+```javascript
+worker.postMessage({
+  hostname: ['example.com'],
+  maxConcurrentRequests: 5,
+  sleepDuration: 1000,
+  requestParams: { apiKey: 'xxx' },
+  requestOptions: { headers: { 'Authorization': 'Bearer xxx' }}
+});
 ```

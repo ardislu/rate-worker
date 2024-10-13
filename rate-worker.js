@@ -5,6 +5,8 @@
  * @property {number} [maxConcurrentRequests=10] The maximum number of requests that are allowed to be inflight at the same time.
  * @property {number} [sleepDuration=1000] The duration (in milliseconds) to wait in between sending each batch of requests.
  * @property {number} [batchInterval=100] The duration (in milliseconds) to wait before sending the first batch of requests.
+ * @property {Object} [requestParams] Additional URL parameters to pass with fetch requests to the hostname(s) (e.g., API key parameter).
+ * @property {RequestInit} [requestOptions] Additional request options to pass with fetch requests to the hostname(s) (e.g., Authorization header).
  */
 
 const throttles = [];
@@ -39,6 +41,29 @@ async function clearPending(throttle) {
 
 async function delayedFetch(request, throttle) {
   const { promise, resolve, reject } = Promise.withResolvers();
+  const newUrl = new URL(request.url);
+  const newParams = new URLSearchParams({
+    ...Object.fromEntries(newUrl.searchParams),
+    ...Object.fromEntries(throttle.requestParams)
+  });
+  newUrl.search = `?${newParams}`;
+  const newOptions = Object.fromEntries([
+    ['method', request.method],
+    ['headers', request.headers],
+    ['body', await request.blob()],
+    ['referrer', request.referrer],
+    ['referrerPolicy', request.referrerPolicy],
+    ['mode', request.mode],
+    ['credentials', request.credentials],
+    ['cache', request.cache],
+    ['redirect', request.redirect],
+    ['integrity', request.integrity],
+    ['keepalive', request.keepalive],
+    ['priority', request.priority],
+    ['signal', request.signal],
+    ...Object.entries(throttle.requestOptions)
+  ]);
+  request = new Request(newUrl.toString(), newOptions);
   throttle.pending.push({ request, resolve, reject });
   setTimeout(() => clearPending(throttle), throttle.batchInterval); // Use a short first sleep to gather initial requests, otherwise the first request will start immediately and then invoke the longer sleepDuration
   return promise;
@@ -53,6 +78,8 @@ addEventListener('message', e => {
     throttle.maxConcurrentRequests ??= 10;
     throttle.sleepDuration ??= 1000;
     throttle.batchInterval ??= 100;
+    throttle.requestParams = throttle.requestParams ? new URLSearchParams(throttle.requestParams) : new URLSearchParams({});
+    throttle.requestOptions ??= {};
 
     // Set parameters for clearPending
     throttle.pending = [];
