@@ -47,10 +47,10 @@ async function delayedFetch(request, throttle) {
     ...Object.fromEntries(throttle.requestParams)
   });
   newUrl.search = `?${newParams}`;
+  const newHeaders = new Headers(request.headers);
+  Object.entries(throttle.requestOptions?.headers ?? {}).forEach(e => newHeaders.set(e[0], e[1]));
   const newOptions = Object.fromEntries([
     ['method', request.method],
-    ['headers', request.headers],
-    ['body', await request.blob()],
     ['referrer', request.referrer],
     ['referrerPolicy', request.referrerPolicy],
     ['mode', request.mode],
@@ -61,7 +61,9 @@ async function delayedFetch(request, throttle) {
     ['keepalive', request.keepalive],
     ['priority', request.priority],
     ['signal', request.signal],
-    ...Object.entries(throttle.requestOptions)
+    ...Object.entries(throttle.requestOptions),
+    ['headers', newHeaders],
+    ['body', await request.blob()],
   ]);
   request = new Request(newUrl.toString(), newOptions);
   throttle.pending.push({ request, resolve, reject });
